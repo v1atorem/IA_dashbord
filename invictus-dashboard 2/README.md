@@ -1,4 +1,4 @@
-# Invictus Dashboard
+# Invictus Dashboard 2
 
 Сервис аналитики лидов и продаж Invictus: тянет данные из **amoCRM** и **Facebook**,
 собирает единую базу лидов (`MASTER_LEADS`) и показывает сводки по **любому диапазону дат**.
