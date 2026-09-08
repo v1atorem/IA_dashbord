@@ -3,7 +3,7 @@ import { syncAll, syncAmo, syncFb } from "@/lib/sync";
 import { env } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // сек (важно для хостинга при больших периодах)
+export const maxDuration = 60; // сек. Hobby-тариф Vercel = максимум 60; на Pro можно поднять до 300
 
 function parseRange(body: any) {
   const from = new Date(body?.from);
