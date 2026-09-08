@@ -1,0 +1,100 @@
+// Invictus Dashboard — модель данных
+// MASTER_LEADS = таблица Deal (одна строка = один лид), к ней подтягиваются
+// рекламные расходы (AdSpend) и ручные справочники (CampaignMap, CourseMap).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Сделка/лид из amoCRM. Хранит сырые поля; направления считаются на лету.
+model Deal {
+  id          Int      @id @default(autoincrement())
+  amoId       BigInt   @unique
+  createdAt   DateTime // дата создания сделки в amo (по ней фильтруем период)
+  updatedAt   DateTime @default(now())
+
+  stage       String   // "Этап сделки"
+  budget      Float    @default(0) // "Бюджет ₸"
+  city        String?  // "Город?"  — источник города и для факта, и для мультигородних групп
+
+  // UTM (ключ связки с Meta): medium=кампания, campaign=группа, content=объявление
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+
+  courseRaw   String?  // поле "Курс" — что реально продали
+  formName    String?  // FORMNAME / метка формы
+  dealName    String?  // "Название сделки" (содержит Lead from: URL)
+
+  @@index([createdAt])
+  @@index([utmMedium, utmCampaign, utmContent])
+  @@index([stage])
+}
+
+/// Дневной расход по объявлению из Facebook Marketing API (в USD).
+model AdSpend {
+  id           Int      @id @default(autoincrement())
+  date         DateTime // день откруток
+  adAccountId  String
+  campaign     String   // Название кампании  (= utm_medium)
+  adset        String   // Название группы    (= utm_campaign)
+  ad           String   // Название объявления (= utm_content)
+  spendUsd     Float    @default(0)
+  impressions  Int      @default(0)
+  clicks       Int      @default(0)
+
+  @@unique([date, adAccountId, campaign, adset, ad])
+  @@index([campaign, adset, ad])
+  @@index([date])
+}
+
+/// Ручной справочник: связка кампания+группа → направление и город.
+/// adset = "*" означает правило на всю кампанию (фолбэк, если нет точного).
+model CampaignMap {
+  id          Int      @id @default(autoincrement())
+  campaign    String
+  adset       String   @default("*")
+  direction   String   // ГП | ТЗ | Буст+ | Казахский
+  city        String?  // конкретный город; NULL = город берём из поля "Город?" лида
+  multiCity   Boolean  @default(false) // группа идёт на несколько городов → сплит по факту лидов
+  cities      String[] @default([]) // для multiCity: разрешённые города (сплит только по ним; остальные → "город не указан")
+  note        String?
+  updatedAt   DateTime @updatedAt
+
+  @@unique([campaign, adset])
+}
+
+/// Ручной справочник: значение поля "Курс" → фактическое направление продажи.
+/// Матчинг по вхождению pattern в значение Курса (без регистра), больший priority выигрывает.
+model CourseMap {
+  id        Int      @id @default(autoincrement())
+  pattern   String   @unique // напр. "ГП", "Каз", "Career Boost", "Стретчинг"
+  direction String   // ГП | ТЗ | Буст+ | Казахский
+  priority  Int      @default(0)
+  note      String?
+  updatedAt DateTime @updatedAt
+}
+
+/// Настройки в формате key/value (JSON в value).
+model Setting {
+  key       String   @id
+  value     String   // JSON
+  updatedAt DateTime @updatedAt
+}
+
+/// Журнал синхронизаций.
+model SyncRun {
+  id         Int      @id @default(autoincrement())
+  source     String   // amo | fb | csv
+  status     String   // running | ok | error
+  startedAt  DateTime @default(now())
+  finishedAt DateTime?
+  rows       Int      @default(0)
+  message    String?
+}
