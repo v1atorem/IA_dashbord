@@ -1,13 +1,12 @@
 "use client";
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const params = useSearchParams();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -20,7 +19,9 @@ export default function LoginPage() {
     });
     setLoading(false);
     if (res.ok) {
-      router.push(params.get("next") || "/");
+      const next =
+        new URLSearchParams(window.location.search).get("next") || "/";
+      router.push(next);
       router.refresh();
     } else {
       const j = await res.json().catch(() => ({}));

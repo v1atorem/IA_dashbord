@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { loadSettings, saveSetting, SETTING_KEYS } from "@/lib/settings";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   return NextResponse.json(await loadSettings());
 }

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 /** Список правил + подсказки: кампании/группы из расхода и лидов. */
 export async function GET() {
   const [rules, spendKeys, dealKeys] = await Promise.all([

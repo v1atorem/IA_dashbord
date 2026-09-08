@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 /** Правила «Курс → направление» + список встреченных значений поля Курс. */
 export async function GET() {
   const [rules, courses] = await Promise.all([

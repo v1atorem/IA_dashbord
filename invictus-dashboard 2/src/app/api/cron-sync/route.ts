@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { syncAll } from "@/lib/sync";
 import { env } from "@/lib/config";
 
+export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 /**
